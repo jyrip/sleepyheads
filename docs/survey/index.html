@@ -118,7 +118,7 @@ input[type=email] { width: 100%; font-size: 18px; font-family: var(--font-body);
 </div>
 
 <script>
-const SURVEY_VERSION = '2026-11-15';
+const SURVEY_VERSION = '2026-11-16';
 
 // ---------- texts ----------
 const UI = {
@@ -227,10 +227,8 @@ const Q = [
     opts: [['fine', 'Fine', 'Peenike'], ['medium', 'Medium', 'Keskmine'], ['coarse', 'Coarse', 'Jäme']] },
   { key: 'hair_density', sec: 'B', type: 'single', en: 'How dense is your hair?', et: 'Kui tihedad on sinu juuksed?',
     opts: [['low', 'Thin, scalp shows through', 'Hõredad, peanahk paistab läbi'], ['medium', 'Medium', 'Keskmised'], ['high', 'Thick', 'Tihedad']] },
-  { key: 'scalp_type', sec: 'B', type: 'single', en: 'What is your scalp type?', et: 'Milline on sinu peanahk?',
-    opts: [['normal', 'Normal', 'Normaalne'], ['dry', 'Dry', 'Kuiv'], ['oily', 'Oily', 'Rasune'], ['combination', 'Combination', 'Segatüüpi']] },
-  { key: 'scalp_oiliness', sec: 'B', type: 'scale', en: 'How oily is your scalp?', et: 'Kui rasune on sinu peanahk?', ends: [['Not at all', 'Very oily'], ['Üldse mitte', 'Väga rasune']] },
-  { key: 'scalp_dryness', sec: 'B', type: 'scale', en: 'How dry is your scalp?', et: 'Kui kuiv on sinu peanahk?', ends: [['Not at all', 'Very dry'], ['Üldse mitte', 'Väga kuiv']] },
+  { key: 'scalp_type', sec: 'B', type: 'single', en: 'How does your scalp usually feel?', et: 'Milline on sinu peanahk tavaliselt?',
+    opts: [['dry', 'Dry, sometimes flaky', 'Kuiv, mõnikord ketendav'], ['normal', 'Normal', 'Normaalne'], ['oily', 'Oily, hair gets greasy fast', 'Rasune, juuksed lähevad kiiresti rasvaseks'], ['combination', 'Oily in some places, dry in others', 'Kohati rasune, kohati kuiv']] },
   { key: 'scalp_itching', sec: 'B', type: 'scale', en: 'How itchy is your scalp?', et: 'Kui palju sinu peanahk sügeleb?', ends: [['Never', 'Very often'], ['Mitte kunagi', 'Väga tihti']] },
   { key: 'dandruff', sec: 'B', type: 'scale', en: 'How often do you have dandruff?', et: 'Kui tihti sul on kõõm?', ends: [['Never', 'Always'], ['Mitte kunagi', 'Alati']] },
   { key: 'wash_per_week', sec: 'B', type: 'num', min: 0, max: 14, def: 3, unit: ['times a week', 'korda nädalas'], en: 'How many times a week do you wash your hair?', et: 'Mitu korda nädalas sa juukseid pesed?' },
