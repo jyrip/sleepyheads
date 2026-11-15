@@ -88,6 +88,9 @@ input[type=email] { width: 100%; font-size: 18px; font-family: var(--font-body);
 .probbox h3 { font-family: var(--font-display); font-size: 19px; margin: 0; text-wrap: balance; }
 .probnum { font-size: 22px !important; }
 .bar.big { height: 10px; border-radius: 5px; background: var(--surface); }
+.sendstate { margin: 0; font-size: 15px; font-weight: 600; }
+.sendstate.pending { color: var(--warn); }
+.sendstate.ok { color: var(--ok); }
 .owner h2 { font-family: var(--font-display); font-size: 20px; margin: 0; }
 .stats { display: flex; gap: 24px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
 .stats div b { display: block; font-family: var(--font-display); font-size: 28px; }
@@ -125,6 +128,8 @@ const UI = {
     start: 'Start', next: 'Next', back: 'Back', submit: 'Submit answers', skip: 'Skip',
     of: 'of', question: 'Question', required: 'Please answer to continue.',
     consentTitle: 'Before you start', consentErr: 'Both agreements are needed to take part.',
+    sendingN: n => `Sending your answers… ${n} left. Please keep this page open.`,
+    allSent: 'All answers are saved.',
     offline: 'Some answers are not sent yet. They are kept in this browser and sent automatically when the connection is back.',
     loading: 'Connecting…',
     saving: 'Saving…', saveErr: 'Saving failed. Check your connection and press Submit again.',
@@ -148,6 +153,8 @@ const UI = {
     start: 'Alusta', next: 'Edasi', back: 'Tagasi', submit: 'Saada vastused', skip: 'Jäta vahele',
     of: '/', question: 'Küsimus', required: 'Vasta, et edasi minna.',
     consentTitle: 'Enne alustamist', consentErr: 'Osalemiseks on vaja mõlemat nõusolekut.',
+    sendingN: n => `Saadan vastuseid… ${n} jäänud. Palun ära sulge veel seda lehte.`,
+    allSent: 'Kõik vastused on salvestatud.',
     offline: 'Osa vastuseid pole veel saadetud. Need on selles brauseris alles ja saadetakse automaatselt, kui ühendus taastub.',
     loading: 'Ühendan…',
     saving: 'Salvestan…', saveErr: 'Salvestamine ebaõnnestus. Kontrolli ühendust ja vajuta uuesti Saada.',
@@ -359,6 +366,7 @@ function render() {
         <p class="small">${esc(t('probNote'))}</p></div>`;
     }
     card.innerHTML = `<h2 class="q">${esc(t('thanks'))}</h2><p class="hint" style="margin:0">${esc(t('thanksText'))}</p>
+      <p class="sendstate" id="sendState"></p>
       ${probHtml}
       <div class="nav"><span></span><button class="btn" id="again" type="button">${esc(t('again'))}</button></div>`;
     $('again').addEventListener('click', () => { screen = 'intro'; startedAt = null; probChoice = null; submissionId = null; for (const k in answers) delete answers[k]; email = ''; render(); });
@@ -366,6 +374,7 @@ function render() {
       probChoice = yes; render();
       queueEvent('wants_probability', yes ? 'yes' : 'no');
     };
+    updateSendState();
     if ($('probYes')) { $('probYes').addEventListener('click', () => choose(true)); $('probNo').addEventListener('click', () => choose(false)); }
   }
 }
@@ -518,7 +527,15 @@ function queueEvent(type, value, key) {
     user_agent: navigator.userAgent
   });
   LS.set('hs_queue', JSON.stringify(queue));
+  updateSendState();
   flush();
+}
+
+function updateSendState() {
+  const el = $('sendState');
+  if (!el) return;
+  el.textContent = queue.length ? t('sendingN')(queue.length) : t('allSent');
+  el.className = 'sendstate ' + (queue.length ? 'pending' : 'ok');
 }
 
 async function flush() {
@@ -532,6 +549,7 @@ async function flush() {
     queue = queue.filter(e => !sent.has(e.event_id));
     LS.set('hs_queue', JSON.stringify(queue));
     retryMs = 2000;
+    updateSendState();
     const off = $('offline'); if (off) off.hidden = true;
   } catch (e) {
     const off = $('offline'); if (off) off.hidden = false;
@@ -542,6 +560,9 @@ async function flush() {
   }
 }
 window.addEventListener('online', flush);
+window.addEventListener('beforeunload', e => {
+  if (queue.length && SAVE_URL) { flush(); e.preventDefault(); e.returnValue = ''; }
+});
 window.addEventListener('pagehide', () => {
   if (queue.length && SAVE_URL && navigator.sendBeacon) {
     if (navigator.sendBeacon(SAVE_URL, new Blob([JSON.stringify(queue)], { type: 'text/plain;charset=utf-8' }))) { queue = []; LS.set('hs_queue', '[]'); }
