@@ -547,8 +547,9 @@ function queueEvent(type, value, key) {
 function updateSendState() {
   const el = $('sendState');
   if (!el) return;
-  el.textContent = queue.length ? t('sendingN')(queue.length) : t('allSent');
-  el.className = 'sendstate ' + (queue.length ? 'pending' : 'ok');
+  const n = queue.filter(x => x.event_type !== 'contact').length;
+  el.textContent = n ? t('sendingN')(n) : t('allSent');
+  el.className = 'sendstate ' + (n ? 'pending' : 'ok');
 }
 
 async function flush() {
@@ -556,7 +557,9 @@ async function flush() {
   sending = true;
   // an e-mail travels alone, never in the same request as answers
   const others = queue.filter(e => e.event_type !== 'contact');
-  const batch = others.length ? others.slice(0, 25) : queue.slice(0, 1);
+  const due = queue.filter(e => e.event_type === 'contact' && !(e.not_before > Date.now()));
+  if (!others.length && !due.length) { sending = false; return; }
+  const batch = others.length ? others.slice(0, 25) : due.slice(0, 1).map(({ not_before, ...rest }) => rest);
   try {
     // text/plain avoids a CORS preflight; Apps Script reads e.postData.contents
     await fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(batch) });
@@ -576,7 +579,8 @@ async function flush() {
 }
 window.addEventListener('online', flush);
 window.addEventListener('beforeunload', e => {
-  if (queue.length && SAVE_URL) { flush(); e.preventDefault(); e.returnValue = ''; }
+  // only unsent answers block closing; a waiting e-mail is sent with sendBeacon on page hide
+  if (queue.some(x => x.event_type !== 'contact') && SAVE_URL) { flush(); e.preventDefault(); e.returnValue = ''; }
 });
 window.addEventListener('pagehide', () => {
   if (queue.length && SAVE_URL && navigator.sendBeacon) {
@@ -584,17 +588,19 @@ window.addEventListener('pagehide', () => {
     const answersPart = queue.filter(e => e.event_type !== 'contact');
     const contacts = queue.filter(e => e.event_type === 'contact');
     let ok = !answersPart.length || beacon(answersPart);
-    contacts.forEach(c => { ok = beacon([c]) && ok; });
+    contacts.forEach(({ not_before, ...c }) => { ok = beacon([c]) && ok; });
     if (ok) { queue = []; LS.set('hs_queue', '[]'); }
   }
 });
 
 function queueContact(addr) {
-  // no respondent id, submission id, device code or time of day: the e-mail cannot be linked to the answers
-  queue.push({ event_id: uuid(), event_type: 'contact', value: addr, language: lang });
+  // no respondent id, submission id, device code or time: the e-mail cannot be linked to the answers.
+  // It is sent after a random delay of 20-90 s, so it does not arrive right after the last answer.
+  const item = { event_id: uuid(), event_type: 'contact', value: addr, language: lang, not_before: Date.now() + 20000 + Math.random() * 70000 };
+  queue.push(item);
   LS.set('hs_queue', JSON.stringify(queue));
   updateSendState();
-  flush();
+  setTimeout(flush, item.not_before - Date.now() + 100);
 }
 
 function submit(withEmail) {
@@ -607,7 +613,6 @@ function submit(withEmail) {
   render();
   setTimeout(() => {
     queueEvent('complete', String(visibleQs().length));
-    queueEvent('email_given', addr ? 'yes' : 'no');
     if (addr) queueContact(addr);
     email = '';
   }, 0);
@@ -620,6 +625,7 @@ $('lang-en').addEventListener('click', () => setLang('en'));
 $('lang-et').addEventListener('click', () => setLang('et'));
 setLang(lang);
 makeDeviceHash().then(h => { deviceHash = h; });
+queue.filter(e => e.event_type === 'contact').forEach(c => setTimeout(flush, Math.max(0, (c.not_before || 0) - Date.now()) + 100));
 if (!SAVE_URL) {
   const n = document.createElement('p');
   n.className = 'notice';
