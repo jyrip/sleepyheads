@@ -207,6 +207,13 @@ const CONSENTS = [
 ];
 
 // type: num | single | multi | scale ; opts: [code, en, et]
+const MID = ['If it varies, choose a typical middle value.', 'Kui see kõigub, vali tüüpiline keskmine väärtus.'];
+// medical questions look back about one fifth of the respondent's life (at least 1 year)
+const PERIOD = a => {
+  const n = Math.max(1, Math.round((a.age || 30) * 0.2));
+  return [`Think of the last ${n} year${n === 1 ? '' : 's'} (about one fifth of your life). Choose all that apply.`,
+          `Mõtle viimasele ${n} aastale (umbes viiendik sinu elust). Vali kõik sobivad.`];
+};
 const YN = [['yes', 'Yes', 'Jah'], ['no', 'No', 'Ei']];
 const YND = [...YN, ['dont_know', "Don't know", 'Ei tea']];
 const Q = [
@@ -218,8 +225,8 @@ const Q = [
     hint: ['Optional. Hair type differs between groups.', 'Valikuline. Juuksetüüp erineb rühmati.'],
     opts: [['asian', 'Asian', 'Aasia'], ['african', 'African descent', 'Aafrika päritolu'], ['caucasian', 'Caucasian / European', 'Euroopa päritolu'],
            ['hispanic', 'Hispanic / Latin American', 'Ladina-Ameerika'], ['middle_eastern', 'Middle Eastern', 'Lähis-Ida'], ['mixed_other', 'Mixed or other', 'Segapäritolu või muu'], ['no_answer', 'Prefer not to say', 'Ei soovi öelda']] },
-  { key: 'height_cm', sec: 'A', type: 'num', min: 120, max: 220, def: 170, unit: ['cm', 'cm'], en: 'How tall are you?', et: 'Kui pikk sa oled?' },
-  { key: 'weight_kg', sec: 'A', type: 'num', min: 30, max: 160, def: 70, unit: ['kg', 'kg'], en: 'How much do you weigh?', et: 'Kui palju sa kaalud?' },
+  { key: 'height_cm', sec: 'A', type: 'num', min: 120, max: 220, def: 170, unit: ['cm', 'cm'], hint: ['Your current height. Choose the closest value.', 'Sinu praegune pikkus. Vali lähim väärtus.'], en: 'How tall are you?', et: 'Kui pikk sa oled?' },
+  { key: 'weight_kg', sec: 'A', type: 'num', min: 30, max: 160, def: 70, unit: ['kg', 'kg'], hint: ['Your current weight. A rough value is fine.', 'Sinu praegune kaal. Ligikaudne väärtus sobib.'], en: 'How much do you weigh?', et: 'Kui palju sa kaalud?' },
   // B. hair and scalp
   { key: 'hair_type', sec: 'B', type: 'single', en: 'What is your hair type?', et: 'Mis tüüpi on sinu juuksed?',
     opts: [['straight', 'Straight', 'Sirged'], ['wavy', 'Wavy', 'Lainelised'], ['curly', 'Curly', 'Lokkis'], ['coily', 'Coily (tight curls)', 'Tihedalt keerdus']] },
@@ -231,9 +238,9 @@ const Q = [
     opts: [['dry', 'Dry, sometimes flaky', 'Kuiv, mõnikord ketendav'], ['normal', 'Normal', 'Normaalne'], ['oily', 'Oily, hair gets greasy fast', 'Rasune, juuksed lähevad kiiresti rasvaseks'], ['combination', 'Oily in some places, dry in others', 'Kohati rasune, kohati kuiv']] },
   { key: 'scalp_itching', sec: 'B', type: 'scale', en: 'How itchy is your scalp?', et: 'Kui palju sinu peanahk sügeleb?', ends: [['Never', 'Very often'], ['Mitte kunagi', 'Väga tihti']] },
   { key: 'dandruff', sec: 'B', type: 'scale', en: 'How often do you have dandruff?', et: 'Kui tihti sul on kõõm?', ends: [['Never', 'Always'], ['Mitte kunagi', 'Alati']] },
-  { key: 'wash_per_week', sec: 'B', type: 'num', min: 0, max: 14, def: 3, unit: ['times a week', 'korda nädalas'], en: 'How many times a week do you wash your hair?', et: 'Mitu korda nädalas sa juukseid pesed?' },
+  { key: 'wash_per_week', sec: 'B', type: 'num', min: 0, max: 14, def: 3, unit: ['times a week', 'korda nädalas'], hint: MID, en: 'How many times a week do you wash your hair?', et: 'Mitu korda nädalas sa juukseid pesed?' },
   // C. lifestyle
-  { key: 'sleep_hours', sec: 'C', type: 'num', min: 3, max: 12, step: 0.5, def: 7, unit: ['hours', 'tundi'], en: 'How many hours do you sleep on a normal night?', et: 'Mitu tundi sa tavalisel ööl magad?' },
+  { key: 'sleep_hours', sec: 'C', type: 'num', min: 3, max: 12, step: 0.5, def: 7, unit: ['hours', 'tundi'], hint: MID, en: 'How many hours do you sleep on a normal night?', et: 'Mitu tundi sa tavalisel ööl magad?' },
   { key: 'late_nights', sec: 'C', type: 'scale', en: 'How often do you go to bed too late?', et: 'Kui tihti lähed magama liiga hilja?', ends: [['Never', 'Every night'], ['Mitte kunagi', 'Iga öö']] },
   { key: 'sleep_disturbance', sec: 'C', type: 'scale', en: 'How often is your sleep disturbed?', et: 'Kui tihti on sinu uni häiritud?', ends: [['Never', 'Every night'], ['Mitte kunagi', 'Iga öö']] },
   { key: 'stress', sec: 'C', type: 'scale', en: 'How stressed do you feel most of the time?', et: 'Kui stressis sa end enamasti tunned?', ends: [['Very low', 'Very high'], ['Väga vähe', 'Väga palju']] },
@@ -241,10 +248,10 @@ const Q = [
     opts: [['non_vegetarian', 'I eat meat', 'Söön liha'], ['eggetarian', 'Vegetarian, but I eat eggs', 'Taimetoitlane, aga söön mune'], ['vegetarian', 'Vegetarian (incl. dairy)', 'Taimetoitlane (koos piimatoodetega)'], ['vegan', 'Vegan', 'Vegan']] },
   { key: 'food_habit', sec: 'C', type: 'single', en: 'How would you describe your food habit?', et: 'Kuidas kirjeldaksid oma toitumisharjumust?',
     opts: [['nutritious', 'Mostly balanced meals', 'Enamasti täisväärtuslik'], ['both', 'Sometimes one, sometimes the other', 'Vahel nii, vahel naa'], ['fast_food', 'Mostly fast food', 'Enamasti kiirtoit']] },
-  { key: 'protein_days', sec: 'C', type: 'num', min: 0, max: 7, def: 4, unit: ['days a week', 'päeva nädalas'], en: 'On how many days a week do you eat protein-rich food (meat, fish, eggs, beans)?', et: 'Mitmel päeval nädalas sa sööd valgurikast toitu (liha, kala, munad, oad)?' },
-  { key: 'water_litres', sec: 'C', type: 'num', min: 0, max: 5, step: 0.1, def: 1.5, unit: ['litres a day', 'liitrit päevas'], en: 'How much water do you drink per day?', et: 'Kui palju vett sa päevas jood?' },
-  { key: 'exercise_days', sec: 'C', type: 'num', min: 0, max: 7, def: 2, unit: ['days a week', 'päeva nädalas'], en: 'On how many days a week do you exercise?', et: 'Mitmel päeval nädalas sa treenid?' },
-  { key: 'smoking', sec: 'C', type: 'single', en: 'Do you smoke?', et: 'Kas sa suitsetad?',
+  { key: 'protein_days', sec: 'C', type: 'num', min: 0, max: 7, def: 4, unit: ['days a week', 'päeva nädalas'], hint: MID, en: 'On how many days a week do you eat protein-rich food (meat, fish, eggs, beans)?', et: 'Mitmel päeval nädalas sa sööd valgurikast toitu (liha, kala, munad, oad)?' },
+  { key: 'water_litres', sec: 'C', type: 'num', min: 0, max: 5, step: 0.1, def: 1.5, unit: ['litres a day', 'liitrit päevas'], hint: MID, en: 'How much water do you drink per day?', et: 'Kui palju vett sa päevas jood?' },
+  { key: 'exercise_days', sec: 'C', type: 'num', min: 0, max: 7, def: 2, unit: ['days a week', 'päeva nädalas'], hint: MID, en: 'On how many days a week do you exercise?', et: 'Mitmel päeval nädalas sa treenid?' },
+  { key: 'smoking', sec: 'C', type: 'single', hint: ['Think of the last 12 months. "I used to" means you stopped more than a year ago.', 'Mõtle viimasele 12 kuule. „Varem suitsetasin“ tähendab, et loobusid rohkem kui aasta tagasi.'], en: 'Do you smoke?', et: 'Kas sa suitsetad?',
     opts: [['never', 'Never', 'Mitte kunagi'], ['former', 'I used to', 'Varem suitsetasin'], ['current', 'Yes', 'Jah']] },
   { key: 'alcohol', sec: 'C', type: 'single', en: 'How often do you drink alcohol?', et: 'Kui tihti sa alkoholi jood?',
     opts: [['never', 'Never', 'Mitte kunagi'], ['occasional', 'Occasionally', 'Mõnikord'], ['regular', 'Regularly', 'Regulaarselt']] },
@@ -256,18 +263,18 @@ const Q = [
   { key: 'chemical_treatments', sec: 'D', type: 'multi', exclusive: 'none', en: 'Which chemical products or treatments do you use?', et: 'Milliseid keemilisi tooteid või protseduure kasutad?',
     hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
     opts: [['none', 'None', 'Mitte ühtegi'], ['coloring', 'Hair colour', 'Juuksevärv'], ['bleaching', 'Bleaching', 'Blondeerimine'], ['perming', 'Perm', 'Keemiline lokk'], ['straightening', 'Chemical straightening', 'Keemiline sirgendamine'], ['styling', 'Gel, wax or other styling products', 'Geel, vaha või muud viimistlustooted']] },
-  { key: 'tight_hairstyles', sec: 'D', type: 'single', en: 'How often do you wear tight hairstyles (ponytail, braids, bun)?', et: 'Kui tihti kannad pingul soengut (hobusesaba, patsid, kukkel)?',
+  { key: 'tight_hairstyles', sec: 'D', type: 'single', en: 'How often do you wear tight hairstyles (ponytail, braids, bun)?', et: 'Kui tihti kannad pingul soengut (hobusesaba, patsid, krunn)?',
     opts: [['never', 'Never', 'Mitte kunagi'], ['occasional', 'Occasionally', 'Mõnikord'], ['frequent', 'Often', 'Tihti']] },
   // E. health
   { key: 'chronic_conditions', sec: 'E', type: 'multi', exclusive: 'none', en: 'Do you have, or did you have, any of these conditions?', et: 'Kas sul on või on olnud mõni neist haigustest?',
-    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+    hint: PERIOD,
     opts: [['none', 'None', 'Mitte ühtegi'], ['thyroid', 'Thyroid disease', 'Kilpnäärme haigus'], ['pcos', 'PCOS', 'PCOS (polütsüstiliste munasarjade sündroom)'], ['alopecia_areata', 'Alopecia areata', 'Pesasid kiilaspäisus (alopecia areata)'],
            ['autoimmune', 'Other autoimmune disease', 'Muu autoimmuunhaigus'], ['anemia', 'Anemia', 'Aneemia (kehvveresus)'], ['other', 'Other chronic illness', 'Muu krooniline haigus'], ['dont_know', "Don't know", 'Ei tea']] },
   { key: 'deficiencies', sec: 'E', type: 'multi', exclusive: 'none', en: 'Has a doctor found a nutrient deficiency?', et: 'Kas arst on leidnud sul mõne toitaine puuduse?',
-    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+    hint: PERIOD,
     opts: [['none', 'None', 'Mitte ühtegi'], ['iron', 'Iron', 'Raud'], ['vitamin_d', 'Vitamin D', 'D-vitamiin'], ['zinc', 'Zinc', 'Tsink'], ['biotin', 'Biotin', 'Biotiin'], ['dont_know', "Don't know / never tested", 'Ei tea / pole testitud']] },
-  { key: 'medication', sec: 'E', type: 'multi', exclusive: 'none', en: 'Do you take any of these medicines?', et: 'Kas võtad mõnda neist ravimitest?',
-    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+  { key: 'medication', sec: 'E', type: 'multi', exclusive: 'none', en: 'Have you taken any of these medicines?', et: 'Kas oled võtnud mõnda neist ravimitest?',
+    hint: PERIOD,
     opts: [['none', 'None', 'Mitte ühtegi'], ['blood_pressure', 'Blood pressure medicine', 'Vererõhuravim'], ['antidepressants', 'Antidepressants', 'Antidepressandid'], ['steroids', 'Steroids', 'Steroidid'], ['chemotherapy', 'Chemotherapy', 'Keemiaravi'], ['other', 'Other medicine that may affect hair', 'Muu juukseid mõjutada võiv ravim'], ['dont_know', "Don't know", 'Ei tea']] },
   { key: 'weight_loss', sec: 'E', type: 'single', en: 'Did you lose a lot of weight in the last 6 months?', et: 'Kas oled viimase 6 kuu jooksul palju kaalu kaotanud?', opts: YN },
   { key: 'hormonal_stage', sec: 'E', type: 'single', showIf: a => a.gender === 'female', en: 'Are you in one of these life stages now?', et: 'Kas oled praegu mõnes neist eluetappidest?',
@@ -406,7 +413,7 @@ function renderQuestion(card) {
   }
   card.innerHTML = `${header(qi, qs.length + 1)}
     <h2 class="q">${esc(q[lang])}</h2>
-    ${q.hint ? `<p class="hint">${esc(L(q.hint))}</p>` : ''}
+    ${q.hint ? `<p class="hint">${esc(L(typeof q.hint === 'function' ? q.hint(answers) : q.hint))}</p>` : ''}
     ${body}
     <p class="err" id="err" hidden>${esc(t('required'))}</p>
     <div class="nav">
