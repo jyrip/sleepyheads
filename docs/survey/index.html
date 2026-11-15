@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Hair Health Survey</title>
+<title>Anonymous Hair Health Survey</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
 /* Layout: narrow centred card, one question per screen */
@@ -104,7 +104,7 @@ input[type=email] { width: 100%; font-size: 18px; font-family: var(--font-body);
 <div class="wrap">
   <div class="top">
     <div>
-      <h1 id="title">Hair Health Survey</h1>
+      <h1 id="title">Anonymous Hair Health Survey</h1>
       <p id="subtitle"></p>
     </div>
     <div class="lang" role="group" aria-label="Language">
@@ -321,7 +321,8 @@ function setLang(l) {
   document.documentElement.lang = l;
   $('lang-en').setAttribute('aria-pressed', l === 'en');
   $('lang-et').setAttribute('aria-pressed', l === 'et');
-  $('title').textContent = l === 'en' ? 'Hair Health Survey' : 'Juuste tervise küsitlus';
+  $('title').textContent = l === 'en' ? 'Anonymous Hair Health Survey' : 'Anonüümne juuste tervise küsitlus';
+  document.title = $('title').textContent;
   $('subtitle').textContent = t('subtitle');
   render();
 }
