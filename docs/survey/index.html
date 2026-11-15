@@ -223,7 +223,7 @@ const Q = [
   // B. hair and scalp
   { key: 'hair_type', sec: 'B', type: 'single', en: 'What is your hair type?', et: 'Mis tüüpi on sinu juuksed?',
     opts: [['straight', 'Straight', 'Sirged'], ['wavy', 'Wavy', 'Lainelised'], ['curly', 'Curly', 'Lokkis'], ['coily', 'Coily (tight curls)', 'Tihedalt keerdus']] },
-  { key: 'hair_texture', sec: 'B', type: 'single', en: 'How thick is a single hair?', et: 'Kui jäme on üks juuksekarv?',
+  { key: 'hair_texture', sec: 'B', type: 'single', en: 'How thick is a single hair?', et: 'Kui jäme on sinu üks juuksekarv?',
     opts: [['fine', 'Fine', 'Peenike'], ['medium', 'Medium', 'Keskmine'], ['coarse', 'Coarse', 'Jäme']] },
   { key: 'hair_density', sec: 'B', type: 'single', en: 'How dense is your hair?', et: 'Kui tihedad on sinu juuksed?',
     opts: [['low', 'Thin, scalp shows through', 'Hõredad, peanahk paistab läbi'], ['medium', 'Medium', 'Keskmised'], ['high', 'Thick', 'Tihedad']] },
@@ -240,7 +240,7 @@ const Q = [
   { key: 'diet_type', sec: 'C', type: 'single', en: 'What is your diet?', et: 'Milline on sinu toitumine?',
     opts: [['non_vegetarian', 'I eat meat', 'Söön liha'], ['eggetarian', 'Vegetarian, but I eat eggs', 'Taimetoitlane, aga söön mune'], ['vegetarian', 'Vegetarian (incl. dairy)', 'Taimetoitlane (koos piimatoodetega)'], ['vegan', 'Vegan', 'Vegan']] },
   { key: 'food_habit', sec: 'C', type: 'single', en: 'How would you describe your food habit?', et: 'Kuidas kirjeldaksid oma toitumisharjumust?',
-    opts: [['nutritious', 'Mostly nutritious', 'Enamasti toitev'], ['both', 'Mixed', 'Segamini'], ['fast_food', 'Mostly fast food', 'Enamasti kiirtoit']] },
+    opts: [['nutritious', 'Mostly balanced meals', 'Enamasti täisväärtuslik'], ['both', 'Sometimes one, sometimes the other', 'Vahel nii, vahel naa'], ['fast_food', 'Mostly fast food', 'Enamasti kiirtoit']] },
   { key: 'protein_days', sec: 'C', type: 'num', min: 0, max: 7, def: 4, unit: ['days a week', 'päeva nädalas'], en: 'On how many days a week do you eat protein-rich food (meat, fish, eggs, beans)?', et: 'Mitmel päeval nädalas sa sööd valgurikast toitu (liha, kala, munad, oad)?' },
   { key: 'water_litres', sec: 'C', type: 'num', min: 0, max: 5, step: 0.1, def: 1.5, unit: ['litres a day', 'liitrit päevas'], en: 'How much water do you drink per day?', et: 'Kui palju vett sa päevas jood?' },
   { key: 'exercise_days', sec: 'C', type: 'num', min: 0, max: 7, def: 2, unit: ['days a week', 'päeva nädalas'], en: 'On how many days a week do you exercise?', et: 'Mitmel päeval nädalas sa treenid?' },
