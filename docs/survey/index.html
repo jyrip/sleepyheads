@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hair Health Survey</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: narrow centred card, one question per screen */
+:root {
+  --bg: #f2f4f6;
+  --surface: #ffffff;
+  --fg: #1c2229;
+  --muted: #5c6773;
+  --line: #d5dbe1;
+  --accent: #3a5a8c;
+  --accent-soft: #e3eaf5;
+  --ok: #2f6f5e;
+  --warn: #9a5b12;
+  --warn-soft: #fbefdc;
+  --font-display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11151a; --surface: #1a2027; --fg: #e5eaf0; --muted: #98a4b0; --line: #2d3640;
+    --accent: #8fb0e6; --accent-soft: #23324a; --ok: #6cc3a6; --warn: #f0b46a; --warn-soft: #3a2a14;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11151a; --surface: #1a2027; --fg: #e5eaf0; --muted: #98a4b0; --line: #2d3640;
+  --accent: #8fb0e6; --accent-soft: #23324a; --ok: #6cc3a6; --warn: #f0b46a; --warn-soft: #3a2a14;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.55;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 18px; }
+.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.top h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 6vw, 36px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.top p { margin: 6px 0 0; color: var(--muted); max-width: 55ch; }
+.lang { display: inline-flex; border: 1.5px solid var(--line); border-radius: 999px; overflow: hidden; flex: none; }
+.lang button { font: 600 13px var(--font-mono); letter-spacing: .06em; padding: 6px 12px; border: 0; background: transparent; color: var(--muted); cursor: pointer; }
+.lang button[aria-pressed="true"] { background: var(--accent); color: var(--surface); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(20px, 5vw, 32px); display: grid; gap: 18px; }
+.meta { display: flex; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.bar { height: 4px; border-radius: 2px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); transition: width .25s; }
+.q { font-family: var(--font-display); font-weight: 500; font-size: clamp(20px, 4.5vw, 25px); line-height: 1.25; margin: 0; text-wrap: balance; }
+.hint { color: var(--muted); margin: -6px 0 0; font-size: 15px; }
+.options { display: grid; gap: 8px; }
+.opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; font: inherit; color: var(--fg);
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px; cursor: pointer; transition: border-color .15s, background .15s; }
+.opt:hover { border-color: var(--accent); }
+.opt[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.opt .mark { width: 18px; height: 18px; border: 2px solid var(--line); flex: none; border-radius: 50%; }
+.opt.multi .mark { border-radius: 4px; }
+.opt[aria-pressed="true"] .mark { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3px var(--surface); }
+.scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.scale .opt { flex-direction: column; justify-content: center; padding: 12px 4px; text-align: center; gap: 4px; }
+.scale .opt b { font-family: var(--font-display); font-size: 22px; }
+.scale-ends { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
+.num { display: flex; align-items: center; gap: 10px; }
+input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+input[type=number], input[type=email] { font: 500 22px var(--font-display); color: var(--fg); background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; padding: 10px 14px; width: 9ch; }
+input[type=email] { width: 100%; font-size: 18px; font-family: var(--font-body); }
+.num span { color: var(--muted); }
+.check { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 10px; cursor: pointer; }
+.check input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); flex: none; }
+.err { color: var(--warn); font-size: 14px; margin: 0; }
+.nav { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.btn { font: inherit; font-weight: 600; border-radius: 10px; padding: 12px 20px; cursor: pointer; border: 1.5px solid var(--line); background: transparent; color: var(--fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.opt:focus-visible, .btn:focus-visible, input:focus-visible, .lang button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.notice { background: var(--warn-soft); color: var(--fg); border-radius: 10px; padding: 12px 14px; font-size: 15px; }
+.small { font-size: 13px; color: var(--muted); margin: 0; }
+.probbox { display: grid; gap: 12px; border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: var(--accent-soft); }
+.probbox h3 { font-family: var(--font-display); font-size: 19px; margin: 0; text-wrap: balance; }
+.probnum { font-size: 22px !important; }
+.bar.big { height: 10px; border-radius: 5px; background: var(--surface); }
+.owner h2 { font-family: var(--font-display); font-size: 20px; margin: 0; }
+.stats { display: flex; gap: 24px; flex-wrap: wrap; font-variant-numeric: tabular-nums; }
+.stats div b { display: block; font-family: var(--font-display); font-size: 28px; }
+.stats div span { color: var(--muted); font-size: 13px; }
+@media (max-width: 420px) { .scale .opt span { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1 id="title">Hair Health Survey</h1>
+      <p id="subtitle"></p>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" id="lang-en" data-lang="en">EN</button>
+      <button type="button" id="lang-et" data-lang="et">ET</button>
+    </div>
+  </div>
+
+  <section class="card" id="card" aria-live="polite"></section>
+
+</div>
+
+<script>
+const SURVEY_VERSION = '2026-11-15';
+
+// ---------- texts ----------
+const UI = {
+  en: {
+    subtitle: 'A university data science project (LTAT.02.002, University of Tartu). About 7 minutes.',
+    intro: 'We study which habits and health factors go together with hair loss. Your answers help us check our model against real people.',
+    start: 'Start', next: 'Next', back: 'Back', submit: 'Submit answers', skip: 'Skip',
+    of: 'of', question: 'Question', required: 'Please answer to continue.',
+    consentTitle: 'Before you start', consentErr: 'Both agreements are needed to take part.',
+    offline: 'Some answers are not sent yet. They are kept in this browser and sent automatically when the connection is back.',
+    loading: 'Connecting…',
+    saving: 'Saving…', saveErr: 'Saving failed. Check your connection and press Submit again.',
+    thanks: 'Thank you!', thanksText: 'Your answers are saved. You can answer again later; we keep every round separately.',
+    again: 'Answer again', prevFound: n => `You have answered this survey ${n} time(s) on this device. A new round is saved separately.`,
+    emailQ: 'Your e-mail address (optional)', emailHint: 'Only if you want detailed results later. We use it for nothing else and delete it after the project (January 2027).',
+    emailErr: 'This does not look like an e-mail address.',
+    yes: 'Yes', no: 'No', dk: "Don't know",
+    probQ: 'Do you want to see your estimated probability of hair loss?',
+    probHint: 'Calculated from your answers with the model from our project (logistic regression, tested on a survey of 715 people).',
+    probYes: 'Yes, show it', probNo: 'No, thanks',
+    probTitle: n => `${n}% estimated probability of hair loss`,
+    probText: n => `Out of 100 people with the same answers, about ${n} had some hair loss in our data. On average it was 63 out of 100.`,
+    probFactors: 'What raised your estimate:', probNone: 'None of the main risk factors applies to you.',
+    probNote: 'For learning only, not medical advice. The model predicts any hair loss, from mild shedding to baldness. It was trained on data that is probably generated. See a doctor about real hair loss.',
+    f_family: 'blood relatives with hair loss', f_illness: 'chronic illness', f_stress: 'high stress', f_chem: 'chemical hair treatments', f_sleep: 'less than 6 hours of sleep', f_anemia: 'anemia or iron deficiency', f_age: 'age'
+  },
+  et: {
+    subtitle: 'Ülikooli andmeteaduse projekt (LTAT.02.002, Tartu Ülikool). Umbes 7 minutit.',
+    intro: 'Uurime, millised harjumused ja terviseseisundid on seotud juuste väljalangemisega. Sinu vastused aitavad meil oma mudelit päris inimeste peal kontrollida.',
+    start: 'Alusta', next: 'Edasi', back: 'Tagasi', submit: 'Saada vastused', skip: 'Jäta vahele',
+    of: '/', question: 'Küsimus', required: 'Vasta, et edasi minna.',
+    consentTitle: 'Enne alustamist', consentErr: 'Osalemiseks on vaja mõlemat nõusolekut.',
+    offline: 'Osa vastuseid pole veel saadetud. Need on selles brauseris alles ja saadetakse automaatselt, kui ühendus taastub.',
+    loading: 'Ühendan…',
+    saving: 'Salvestan…', saveErr: 'Salvestamine ebaõnnestus. Kontrolli ühendust ja vajuta uuesti Saada.',
+    thanks: 'Aitäh!', thanksText: 'Sinu vastused on salvestatud. Võid hiljem uuesti vastata; hoiame iga vastamiskorra eraldi alles.',
+    again: 'Vasta uuesti', prevFound: n => `Oled sellest seadmest sellele küsitlusele vastanud ${n} korda. Uus vastamiskord salvestatakse eraldi.`,
+    emailQ: 'Sinu e-posti aadress (valikuline)', emailHint: 'Ainult siis, kui soovid hiljem täpsemaid tulemusi. Kasutame seda ainult selleks ja kustutame pärast projekti (jaanuar 2027).',
+    emailErr: 'See ei paista e-posti aadress.',
+    yes: 'Jah', no: 'Ei', dk: 'Ei tea',
+    probQ: 'Kas soovid näha oma hinnangulist juuste väljalangemise tõenäosust?',
+    probHint: 'Arvutatud sinu vastustest meie projekti mudeliga (logistiline regressioon, kontrollitud 715 inimese küsitlusel).',
+    probYes: 'Jah, näita', probNo: 'Ei, aitäh',
+    probTitle: n => `${n}% hinnanguline juuste väljalangemise tõenäosus`,
+    probText: n => `Sajast samade vastustega inimesest oli meie andmetes juuste väljalangemine umbes ${n}-l. Keskmiselt oli see 63-l sajast.`,
+    probFactors: 'Mis sinu hinnangut tõstis:', probNone: 'Ükski peamine riskitegur sinu kohta ei kehti.',
+    probNote: 'Ainult õppimiseks, mitte meditsiiniline nõuanne. Mudel ennustab igasugust juuste väljalangemist, kergest hõrenemisest kiilaspäisuseni. See on õpetatud tõenäoliselt genereeritud andmetel. Päris juuste väljalangemise korral pöördu arsti poole.',
+    f_family: 'veresugulastel on juuste väljalangemine', f_illness: 'krooniline haigus', f_stress: 'kõrge stress', f_chem: 'keemilised juuksehooldused', f_sleep: 'alla 6 tunni und', f_anemia: 'aneemia või rauapuudus', f_age: 'vanus'
+  }
+};
+
+// Logistic regression from the project notebook (HairSkin360, 70% training split)
+const MODEL = { intercept: -2.9861702223292523, coef: { age: 0.0474102259432324, male: -0.12372697695455517,
+  family_history: 2.3586298618800696, high_stress: 0.8986120400914264, chronic_illness: 1.1460808421286055,
+  anemia: 0.1971091855813129, chemicals: 0.7207526243637408, short_sleep: 0.705621522435942 } };
+function modelInputs(a) {
+  const has = (k, v) => Array.isArray(a[k]) && a[k].includes(v);
+  const any = k => Array.isArray(a[k]) && a[k].some(x => x !== 'none' && x !== 'dont_know');
+  return {
+    age: a.age ?? 30,
+    male: a.gender === 'male' ? 1 : 0,
+    family_history: a.family_history === 'yes' ? 1 : 0,
+    high_stress: (a.stress || 0) >= 4 ? 1 : 0,
+    chronic_illness: any('chronic_conditions') ? 1 : 0,
+    anemia: has('chronic_conditions', 'anemia') || has('deficiencies', 'iron') ? 1 : 0,
+    chemicals: any('chemical_treatments') ? 1 : 0,
+    short_sleep: (a.sleep_hours ?? 8) < 6 ? 1 : 0
+  };
+}
+function probability(x) {
+  let z = MODEL.intercept;
+  for (const k in MODEL.coef) z += MODEL.coef[k] * x[k];
+  return 1 / (1 + Math.exp(-z));
+}
+let lastAnswers = null, probChoice = null;
+
+const CONSENTS = [
+  { key: 'consent_project', en: 'I agree that my answers are stored and analysed for a university data science project (LTAT.02.002). Each answer is saved as soon as I give it, together with a random code kept in this browser and a technical device code, so that repeated answers can be linked.',
+    et: 'Nõustun, et minu vastuseid säilitatakse ja analüüsitakse ülikooli andmeteaduse projekti jaoks (LTAT.02.002). Iga vastus salvestatakse kohe, koos selles brauseris hoitava juhusliku koodi ja seadme tehnilise koodiga, et korduvaid vastuseid omavahel siduda.' },
+  { key: 'consent_health', en: 'I agree that health-related answers (illness, medication, hair loss) are stored. The project ends in January 2027.',
+    et: 'Nõustun, et säilitatakse terviseandmeid (haigused, ravimid, juuste väljalangemine). Projekt lõpeb jaanuaris 2027.' }
+];
+
+// type: num | single | multi | scale ; opts: [code, en, et]
+const YN = [['yes', 'Yes', 'Jah'], ['no', 'No', 'Ei']];
+const YND = [...YN, ['dont_know', "Don't know", 'Ei tea']];
+const Q = [
+  // A. background
+  { key: 'age', sec: 'A', type: 'num', min: 15, max: 90, def: 30, unit: ['years', 'aastat'], en: 'How old are you?', et: 'Kui vana sa oled?' },
+  { key: 'gender', sec: 'A', type: 'single', en: 'What is your gender?', et: 'Mis on sinu sugu?',
+    opts: [['male', 'Male', 'Mees'], ['female', 'Female', 'Naine'], ['other', 'Other', 'Muu'], ['no_answer', 'Prefer not to say', 'Ei soovi öelda']] },
+  { key: 'ethnicity', sec: 'A', type: 'single', optional: true, en: 'What is your ethnic background?', et: 'Mis on sinu etniline taust?',
+    hint: ['Optional. Hair type differs between groups.', 'Valikuline. Juuksetüüp erineb rühmati.'],
+    opts: [['asian', 'Asian', 'Aasia'], ['african', 'African descent', 'Aafrika päritolu'], ['caucasian', 'Caucasian / European', 'Euroopa päritolu'],
+           ['hispanic', 'Hispanic / Latin American', 'Ladina-Ameerika'], ['middle_eastern', 'Middle Eastern', 'Lähis-Ida'], ['mixed_other', 'Mixed or other', 'Segapäritolu või muu'], ['no_answer', 'Prefer not to say', 'Ei soovi öelda']] },
+  { key: 'height_cm', sec: 'A', type: 'num', min: 120, max: 220, def: 170, unit: ['cm', 'cm'], en: 'How tall are you?', et: 'Kui pikk sa oled?' },
+  { key: 'weight_kg', sec: 'A', type: 'num', min: 30, max: 160, def: 70, unit: ['kg', 'kg'], en: 'How much do you weigh?', et: 'Kui palju sa kaalud?' },
+  // B. hair and scalp
+  { key: 'hair_type', sec: 'B', type: 'single', en: 'What is your hair type?', et: 'Mis tüüpi on sinu juuksed?',
+    opts: [['straight', 'Straight', 'Sirged'], ['wavy', 'Wavy', 'Lainelised'], ['curly', 'Curly', 'Lokkis'], ['coily', 'Coily (tight curls)', 'Tihedalt keerdus']] },
+  { key: 'hair_texture', sec: 'B', type: 'single', en: 'How thick is a single hair?', et: 'Kui jäme on üks juuksekarv?',
+    opts: [['fine', 'Fine', 'Peenike'], ['medium', 'Medium', 'Keskmine'], ['coarse', 'Coarse', 'Jäme']] },
+  { key: 'hair_density', sec: 'B', type: 'single', en: 'How dense is your hair?', et: 'Kui tihedad on sinu juuksed?',
+    opts: [['low', 'Thin, scalp shows through', 'Hõredad, peanahk paistab läbi'], ['medium', 'Medium', 'Keskmised'], ['high', 'Thick', 'Tihedad']] },
+  { key: 'scalp_type', sec: 'B', type: 'single', en: 'What is your scalp type?', et: 'Milline on sinu peanahk?',
+    opts: [['normal', 'Normal', 'Normaalne'], ['dry', 'Dry', 'Kuiv'], ['oily', 'Oily', 'Rasune'], ['combination', 'Combination', 'Segatüüpi']] },
+  { key: 'scalp_oiliness', sec: 'B', type: 'scale', en: 'How oily is your scalp?', et: 'Kui rasune on sinu peanahk?', ends: [['Not at all', 'Very oily'], ['Üldse mitte', 'Väga rasune']] },
+  { key: 'scalp_dryness', sec: 'B', type: 'scale', en: 'How dry is your scalp?', et: 'Kui kuiv on sinu peanahk?', ends: [['Not at all', 'Very dry'], ['Üldse mitte', 'Väga kuiv']] },
+  { key: 'scalp_itching', sec: 'B', type: 'scale', en: 'How itchy is your scalp?', et: 'Kui palju sinu peanahk sügeleb?', ends: [['Never', 'Very often'], ['Mitte kunagi', 'Väga tihti']] },
+  { key: 'dandruff', sec: 'B', type: 'scale', en: 'How often do you have dandruff?', et: 'Kui tihti sul on kõõm?', ends: [['Never', 'Always'], ['Mitte kunagi', 'Alati']] },
+  { key: 'wash_per_week', sec: 'B', type: 'num', min: 0, max: 14, def: 3, unit: ['times a week', 'korda nädalas'], en: 'How many times a week do you wash your hair?', et: 'Mitu korda nädalas sa juukseid pesed?' },
+  // C. lifestyle
+  { key: 'sleep_hours', sec: 'C', type: 'num', min: 3, max: 12, step: 0.5, def: 7, unit: ['hours', 'tundi'], en: 'How many hours do you sleep on a normal night?', et: 'Mitu tundi sa tavalisel ööl magad?' },
+  { key: 'late_nights', sec: 'C', type: 'scale', en: 'How often do you go to bed too late?', et: 'Kui tihti lähed magama liiga hilja?', ends: [['Never', 'Every night'], ['Mitte kunagi', 'Iga öö']] },
+  { key: 'sleep_disturbance', sec: 'C', type: 'scale', en: 'How often is your sleep disturbed?', et: 'Kui tihti on sinu uni häiritud?', ends: [['Never', 'Every night'], ['Mitte kunagi', 'Iga öö']] },
+  { key: 'stress', sec: 'C', type: 'scale', en: 'How stressed do you feel most of the time?', et: 'Kui stressis sa end enamasti tunned?', ends: [['Very low', 'Very high'], ['Väga vähe', 'Väga palju']] },
+  { key: 'diet_type', sec: 'C', type: 'single', en: 'What is your diet?', et: 'Milline on sinu toitumine?',
+    opts: [['non_vegetarian', 'I eat meat', 'Söön liha'], ['eggetarian', 'Vegetarian, but I eat eggs', 'Taimetoitlane, aga söön mune'], ['vegetarian', 'Vegetarian (incl. dairy)', 'Taimetoitlane (koos piimatoodetega)'], ['vegan', 'Vegan', 'Vegan']] },
+  { key: 'food_habit', sec: 'C', type: 'single', en: 'How would you describe your food habit?', et: 'Kuidas kirjeldaksid oma toitumisharjumust?',
+    opts: [['nutritious', 'Mostly nutritious', 'Enamasti toitev'], ['both', 'Mixed', 'Segamini'], ['fast_food', 'Mostly fast food', 'Enamasti kiirtoit']] },
+  { key: 'protein_days', sec: 'C', type: 'num', min: 0, max: 7, def: 4, unit: ['days a week', 'päeva nädalas'], en: 'On how many days a week do you eat protein-rich food (meat, fish, eggs, beans)?', et: 'Mitmel päeval nädalas sa sööd valgurikast toitu (liha, kala, munad, oad)?' },
+  { key: 'water_litres', sec: 'C', type: 'num', min: 0, max: 5, step: 0.1, def: 1.5, unit: ['litres a day', 'liitrit päevas'], en: 'How much water do you drink per day?', et: 'Kui palju vett sa päevas jood?' },
+  { key: 'exercise_days', sec: 'C', type: 'num', min: 0, max: 7, def: 2, unit: ['days a week', 'päeva nädalas'], en: 'On how many days a week do you exercise?', et: 'Mitmel päeval nädalas sa treenid?' },
+  { key: 'smoking', sec: 'C', type: 'single', en: 'Do you smoke?', et: 'Kas sa suitsetad?',
+    opts: [['never', 'Never', 'Mitte kunagi'], ['former', 'I used to', 'Varem suitsetasin'], ['current', 'Yes', 'Jah']] },
+  { key: 'alcohol', sec: 'C', type: 'single', en: 'How often do you drink alcohol?', et: 'Kui tihti sa alkoholi jood?',
+    opts: [['never', 'Never', 'Mitte kunagi'], ['occasional', 'Occasionally', 'Mõnikord'], ['regular', 'Regularly', 'Regulaarselt']] },
+  { key: 'environment', sec: 'C', type: 'scale', en: 'How much are you exposed to pollution, strong sun or harsh weather?', et: 'Kui palju puutud kokku saaste, tugeva päikese või karmi ilmaga?', ends: [['Very little', 'Very much'], ['Väga vähe', 'Väga palju']] },
+  { key: 'water_blame', sec: 'C', type: 'scale', en: 'The water in my area causes hair fall.', et: 'Minu piirkonna vesi põhjustab juuste väljalangemist.', ends: [['Strongly disagree', 'Strongly agree'], ['Üldse ei nõustu', 'Täiesti nõustun']] },
+  // D. hair care
+  { key: 'heat_styling', sec: 'D', type: 'single', en: 'How often do you use heat on your hair (dryer, straightener, curler)?', et: 'Kui tihti kasutad juustel kuumust (föön, sirgendaja, lokitang)?',
+    opts: [['never', 'Never', 'Mitte kunagi'], ['occasional', 'Occasionally', 'Mõnikord'], ['frequent', 'Often', 'Tihti'], ['daily', 'Daily', 'Iga päev']] },
+  { key: 'chemical_treatments', sec: 'D', type: 'multi', exclusive: 'none', en: 'Which chemical products or treatments do you use?', et: 'Milliseid keemilisi tooteid või protseduure kasutad?',
+    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+    opts: [['none', 'None', 'Mitte ühtegi'], ['coloring', 'Hair colour', 'Juuksevärv'], ['bleaching', 'Bleaching', 'Blondeerimine'], ['perming', 'Perm', 'Keemiline lokk'], ['straightening', 'Chemical straightening', 'Keemiline sirgendamine'], ['styling', 'Gel, wax or other styling products', 'Geel, vaha või muud viimistlustooted']] },
+  { key: 'tight_hairstyles', sec: 'D', type: 'single', en: 'How often do you wear tight hairstyles (ponytail, braids, bun)?', et: 'Kui tihti kannad pingul soengut (hobusesaba, patsid, kukkel)?',
+    opts: [['never', 'Never', 'Mitte kunagi'], ['occasional', 'Occasionally', 'Mõnikord'], ['frequent', 'Often', 'Tihti']] },
+  // E. health
+  { key: 'chronic_conditions', sec: 'E', type: 'multi', exclusive: 'none', en: 'Do you have, or did you have, any of these conditions?', et: 'Kas sul on või on olnud mõni neist haigustest?',
+    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+    opts: [['none', 'None', 'Mitte ühtegi'], ['thyroid', 'Thyroid disease', 'Kilpnäärme haigus'], ['pcos', 'PCOS', 'PCOS (polütsüstiliste munasarjade sündroom)'], ['alopecia_areata', 'Alopecia areata', 'Pesasid kiilaspäisus (alopecia areata)'],
+           ['autoimmune', 'Other autoimmune disease', 'Muu autoimmuunhaigus'], ['anemia', 'Anemia', 'Aneemia (kehvveresus)'], ['other', 'Other chronic illness', 'Muu krooniline haigus'], ['dont_know', "Don't know", 'Ei tea']] },
+  { key: 'deficiencies', sec: 'E', type: 'multi', exclusive: 'none', en: 'Has a doctor found a nutrient deficiency?', et: 'Kas arst on leidnud sul mõne toitaine puuduse?',
+    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+    opts: [['none', 'None', 'Mitte ühtegi'], ['iron', 'Iron', 'Raud'], ['vitamin_d', 'Vitamin D', 'D-vitamiin'], ['zinc', 'Zinc', 'Tsink'], ['biotin', 'Biotin', 'Biotiin'], ['dont_know', "Don't know / never tested", 'Ei tea / pole testitud']] },
+  { key: 'medication', sec: 'E', type: 'multi', exclusive: 'none', en: 'Do you take any of these medicines?', et: 'Kas võtad mõnda neist ravimitest?',
+    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+    opts: [['none', 'None', 'Mitte ühtegi'], ['blood_pressure', 'Blood pressure medicine', 'Vererõhuravim'], ['antidepressants', 'Antidepressants', 'Antidepressandid'], ['steroids', 'Steroids', 'Steroidid'], ['chemotherapy', 'Chemotherapy', 'Keemiaravi'], ['other', 'Other medicine that may affect hair', 'Muu juukseid mõjutada võiv ravim'], ['dont_know', "Don't know", 'Ei tea']] },
+  { key: 'weight_loss', sec: 'E', type: 'single', en: 'Did you lose a lot of weight in the last 6 months?', et: 'Kas oled viimase 6 kuu jooksul palju kaalu kaotanud?', opts: YN },
+  { key: 'hormonal_stage', sec: 'E', type: 'single', showIf: a => a.gender === 'female', en: 'Are you in one of these life stages now?', et: 'Kas oled praegu mõnes neist eluetappidest?',
+    opts: [['none', 'None of these', 'Mitte ühes'], ['pregnancy', 'Pregnancy', 'Rasedus'], ['postpartum', 'Up to a year after giving birth', 'Kuni aasta pärast sünnitust'], ['perimenopause', 'Perimenopause', 'Perimenopaus'], ['menopause', 'Menopause', 'Menopaus']] },
+  // F. family and hair loss
+  { key: 'family_history', sec: 'F', type: 'single', en: 'Do any of your blood relatives have hair loss or baldness?', et: 'Kas kellelgi sinu veresugulastest on juuste väljalangemine või kiilaspäisus?',
+    hint: ['Biological parents, grandparents, brothers, sisters, uncles or aunts. Not relatives by marriage.', 'Bioloogilised vanemad, vanavanemad, õed-vennad, onud või tädid. Mitte abielu kaudu sugulased.'], opts: YND },
+  { key: 'hair_fall_problem', sec: 'F', type: 'scale', en: 'How big is your hair fall problem?', et: 'Kui suur on sinu juuste väljalangemise probleem?', ends: [['No problem', 'Severe problem'], ['Probleemi pole', 'Tõsine probleem']] },
+  { key: 'hair_fall_frequency', sec: 'F', type: 'single', en: 'How often do you notice hair falling out (on the pillow, in the shower, in the brush)?', et: 'Kui tihti märkad juuste väljalangemist (padjal, duši all, harjal)?',
+    opts: [['rarely', 'Rarely', 'Harva'], ['sometimes', 'Sometimes', 'Mõnikord'], ['often', 'Often', 'Tihti'], ['daily', 'Every day', 'Iga päev']] },
+  { key: 'hair_loss_level', sec: 'F', type: 'single', en: 'How much hair have you lost compared with 5 years ago?', et: 'Kui palju juukseid oled kaotanud võrreldes 5 aasta taguse ajaga?',
+    opts: [['none', 'None', 'Üldse mitte'], ['mild', 'A little, others do not notice', 'Natuke, teised ei märka'], ['moderate', 'Clearly visible', 'Selgelt nähtav'], ['severe', 'A lot, bald areas', 'Palju, kiilad kohad']] },
+  { key: 'onset_age', sec: 'F', type: 'num', min: 5, max: 90, def: 25, unit: ['years', 'aastat'], optional: true,
+    showIf: a => a.hair_fall_problem > 1 || (a.hair_loss_level && a.hair_loss_level !== 'none'),
+    en: 'At what age did your hair loss start?', et: 'Mis vanuses sinu juuste väljalangemine algas?', hint: ['A rough guess is fine.', 'Ligikaudne vastus sobib.'] },
+  { key: 'treatment', sec: 'F', type: 'multi', exclusive: 'none', en: 'Have you had any treatment for hair loss?', et: 'Kas oled saanud juuste väljalangemise ravi?',
+    hint: ['Choose all that apply.', 'Vali kõik sobivad.'],
+    opts: [['none', 'None', 'Ei'], ['minoxidil', 'Minoxidil', 'Minoksidiil'], ['finasteride', 'Finasteride', 'Finasteriid'], ['prp', 'PRP injections', 'PRP-süstid'], ['transplant', 'Hair transplant', 'Juuksesiirdamine'], ['other', 'Other', 'Muu']] }
+];
+
+// ---------- state ----------
+let lang = (navigator.language || '').startsWith('et') ? 'et' : 'en';
+try { lang = localStorage.getItem('hair_survey_lang') || lang; } catch (e) {}
+let screen = 'intro';   // intro | q | email | done
+let qi = 0;
+const answers = {};
+const consents = {};
+let email = '';
+let startedAt = null;
+let respondentId = null, submissionSeq = 0, submissionId = null, deviceHash = null;
+
+const $ = id => document.getElementById(id);
+const t = k => UI[lang][k];
+const L = (o, i) => Array.isArray(o) ? o[lang === 'en' ? 0 : 1] : o;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const visibleQs = () => Q.filter(q => !q.showIf || q.showIf(answers));
+const optLabel = o => lang === 'en' ? o[1] : o[2];
+
+function setLang(l) {
+  lang = l;
+  try { localStorage.setItem('hair_survey_lang', l); } catch (e) {}
+  document.documentElement.lang = l;
+  $('lang-en').setAttribute('aria-pressed', l === 'en');
+  $('lang-et').setAttribute('aria-pressed', l === 'et');
+  $('title').textContent = l === 'en' ? 'Hair Health Survey' : 'Juuste tervise küsitlus';
+  $('subtitle').textContent = t('subtitle');
+  render();
+}
+
+function answered(q) {
+  const v = answers[q.key];
+  if (q.optional) return true;
+  if (q.type === 'multi') return Array.isArray(v) && v.length > 0;
+  if (q.type === 'num') return v !== undefined && v !== '' && !isNaN(v) && v >= q.min && v <= q.max;
+  return v !== undefined;
+}
+
+// ---------- rendering ----------
+function render() {
+  const card = $('card');
+  if (screen === 'intro') {
+    card.innerHTML = `
+      <h2 class="q">${esc(t('consentTitle'))}</h2>
+      <p class="hint" style="margin:0">${esc(t('intro'))}</p>
+      ${storedSeq() > 0 ? `<p class="notice">${esc(t('prevFound')(storedSeq()))}</p>` : ''}
+      ${CONSENTS.map(c => `<label class="check"><input type="checkbox" id="${c.key}" ${consents[c.key] ? 'checked' : ''}><span>${esc(c[lang])}</span></label>`).join('')}
+      <p class="err" id="err" hidden>${esc(t('consentErr'))}</p>
+      <div class="nav"><span></span><button class="btn primary" id="go" type="button">${esc(t('start'))}</button></div>`;
+    CONSENTS.forEach(c => $(c.key).addEventListener('change', e => { consents[c.key] = e.target.checked; }));
+    $('go').addEventListener('click', () => {
+      if (!CONSENTS.every(c => consents[c.key])) { $('err').hidden = false; return; }
+      if (!submissionId) startSubmission();
+      screen = 'q'; qi = 0; render();
+    });
+    return;
+  }
+  if (screen === 'q') return renderQuestion(card);
+  if (screen === 'email') return renderEmail(card);
+  if (screen === 'done') {
+    let probHtml = '';
+    if (probChoice === null) {
+      probHtml = `<div class="probbox"><h3>${esc(t('probQ'))}</h3><p class="hint" style="margin:0">${esc(t('probHint'))}</p>
+        <div class="nav"><button class="btn" id="probNo" type="button">${esc(t('probNo'))}</button><button class="btn primary" id="probYes" type="button">${esc(t('probYes'))}</button></div></div>`;
+    } else if (probChoice === true && lastAnswers) {
+      const x = modelInputs(lastAnswers);
+      const n = Math.round(probability(x) * 100);
+      const names = { family_history: 'f_family', chronic_illness: 'f_illness', high_stress: 'f_stress', chemicals: 'f_chem', short_sleep: 'f_sleep', anemia: 'f_anemia' };
+      const raised = Object.keys(names).filter(k => x[k] === 1).sort((a, b) => MODEL.coef[b] - MODEL.coef[a]);
+      probHtml = `<div class="probbox"><h3 class="probnum">${esc(t('probTitle')(n))}</h3>
+        <div class="bar big"><i style="width:${n}%"></i></div>
+        <p style="margin:0">${esc(t('probText')(n))}</p>
+        <p style="margin:0"><strong>${esc(raised.length ? t('probFactors') : t('probNone'))}</strong> ${esc(raised.map(k => t(names[k])).join(', '))}</p>
+        <p class="small">${esc(t('probNote'))}</p></div>`;
+    }
+    card.innerHTML = `<h2 class="q">${esc(t('thanks'))}</h2><p class="hint" style="margin:0">${esc(t('thanksText'))}</p>
+      ${probHtml}
+      <div class="nav"><span></span><button class="btn" id="again" type="button">${esc(t('again'))}</button></div>`;
+    $('again').addEventListener('click', () => { screen = 'intro'; startedAt = null; probChoice = null; submissionId = null; for (const k in answers) delete answers[k]; email = ''; render(); });
+    const choose = async yes => {
+      probChoice = yes; render();
+      queueEvent('wants_probability', yes ? 'yes' : 'no');
+    };
+    if ($('probYes')) { $('probYes').addEventListener('click', () => choose(true)); $('probNo').addEventListener('click', () => choose(false)); }
+  }
+}
+
+function header(i, n) {
+  return `<div class="meta"><span>${esc(t('question'))} ${i + 1} ${esc(t('of'))} ${n}</span></div>
+    <div class="bar"><i style="width:${Math.round((i + 1) / n * 100)}%"></i></div>`;
+}
+
+function renderQuestion(card) {
+  const qs = visibleQs();
+  if (qi >= qs.length) { screen = 'email'; return render(); }
+  const q = qs[qi];
+  const v = answers[q.key];
+  let body = '';
+  if (q.type === 'num') {
+    if (v === undefined && !q.optional) answers[q.key] = q.def;
+    const cur = answers[q.key] ?? q.def;
+    body = `<div class="num"><input type="number" id="in-${q.key}" inputmode="decimal" min="${q.min}" max="${q.max}" step="${q.step || 1}" value="${answers[q.key] ?? ''}" aria-label="${esc(q[lang])}"><span>${esc(L(q.unit))}</span></div>
+      <input type="range" id="rg-${q.key}" min="${q.min}" max="${q.max}" step="${q.step || 1}" value="${cur}" aria-label="${esc(q[lang])}">
+      <div class="scale-ends"><span>${q.min}</span><span>${q.max}</span></div>`;
+  } else if (q.type === 'scale') {
+    body = `<div class="scale" role="group">${[1, 2, 3, 4, 5].map(n => `<button type="button" class="opt" id="opt-${q.key}-${n}" data-v="${n}" aria-pressed="${v === n}"><b>${n}</b></button>`).join('')}</div>
+      <div class="scale-ends"><span>1 = ${esc(L(q.ends)[0])}</span><span>5 = ${esc(L(q.ends)[1])}</span></div>`;
+  } else {
+    const multi = q.type === 'multi';
+    body = `<div class="options" role="group">${q.opts.map(o => {
+      const on = multi ? (v || []).includes(o[0]) : v === o[0];
+      return `<button type="button" class="opt${multi ? ' multi' : ''}" id="opt-${q.key}-${o[0]}" data-v="${o[0]}" aria-pressed="${on}"><span class="mark"></span>${esc(optLabel(o))}</button>`;
+    }).join('')}</div>`;
+  }
+  card.innerHTML = `${header(qi, qs.length + 1)}
+    <h2 class="q">${esc(q[lang])}</h2>
+    ${q.hint ? `<p class="hint">${esc(L(q.hint))}</p>` : ''}
+    ${body}
+    <p class="err" id="err" hidden>${esc(t('required'))}</p>
+    <div class="nav">
+      <button class="btn" id="back" type="button">${esc(t('back'))}</button>
+      <button class="btn primary" id="next" type="button">${esc(q.optional && !answers[q.key] ? t('skip') : t('next'))}</button>
+    </div>`;
+
+  if (q.type === 'num') {
+    const inp = $('in-' + q.key), rg = $('rg-' + q.key);
+    const sync = val => { $('next').textContent = q.optional && (val === undefined) ? t('skip') : t('next'); };
+    inp.addEventListener('input', () => { answers[q.key] = inp.value === '' ? undefined : +inp.value; if (inp.value !== '') rg.value = inp.value; sync(answers[q.key]); });
+    rg.addEventListener('input', () => { answers[q.key] = +rg.value; inp.value = rg.value; sync(answers[q.key]); });
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') next(); });
+  } else {
+    card.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+      const val = q.type === 'scale' ? +b.dataset.v : b.dataset.v;
+      if (q.type === 'multi') {
+        let cur = answers[q.key] || [];
+        if (val === q.exclusive || val === 'dont_know') cur = cur.includes(val) ? [] : [val];
+        else { cur = cur.filter(x => x !== q.exclusive && x !== 'dont_know'); cur = cur.includes(val) ? cur.filter(x => x !== val) : [...cur, val]; }
+        answers[q.key] = cur;
+        card.querySelectorAll('.opt').forEach(x => x.setAttribute('aria-pressed', cur.includes(x.dataset.v)));
+      } else {
+        answers[q.key] = val;
+        card.querySelectorAll('.opt').forEach(x => x.setAttribute('aria-pressed', x === b));
+        setTimeout(next, 180);
+      }
+    }));
+  }
+  $('back').addEventListener('click', () => { if (qi === 0) { screen = 'intro'; } else { qi--; } render(); });
+  $('next').addEventListener('click', next);
+}
+
+function next() {
+  const q = visibleQs()[qi];
+  if (!answered(q)) { $('err').hidden = false; return; }
+  qi++;
+  render();
+  // save in the background after the next screen is visible
+  const v = answers[q.key];
+  setTimeout(() => queueEvent('answer', v === undefined ? '' : v, q.key), 0);
+}
+
+function renderEmail(card) {
+  const n = visibleQs().length;
+  card.innerHTML = `${header(n, n + 1)}
+    <h2 class="q">${esc(t('emailQ'))}</h2>
+    <p class="hint">${esc(t('emailHint'))}</p>
+    <input type="email" id="email" autocomplete="email" value="${esc(email)}" placeholder="name@example.com">
+    <p class="err" id="err" hidden></p>
+    <div class="nav">
+      <button class="btn" id="back" type="button">${esc(t('back'))}</button>
+      <button class="btn primary" id="submit" type="button">${esc(t('submit'))}</button>
+    </div>
+    <p class="notice" id="offline" hidden>${esc(t('offline'))}</p>`;
+  $('email').addEventListener('input', e => { email = e.target.value.trim(); });
+  $('back').addEventListener('click', () => { screen = 'q'; qi = visibleQs().length - 1; render(); });
+  $('submit').addEventListener('click', submit);
+}
+
+// ---------- saving: background queue to Google Apps Script ----------
+// Paste the web app URL of the Apps Script deployment here (ends with /exec)
+const SAVE_URL = 'https://script.google.com/macros/s/AKfycby2PDscCLM7VsDVbO5JUROMwyEUvaANkOj065R7dauZH-_Yh50_zhRpI2OLd1_3TnPr/exec';
+
+const LS = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+             set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'r-' + Date.now().toString(36) + Math.random().toString(36).slice(2));
+function storedSeq() { return +(LS.get('hs_submission_seq') || 0); }
+
+function deviceType() {
+  if (/Mobi|Android|iPhone/i.test(navigator.userAgent)) return 'mobile';
+  return ('ontouchstart' in window && Math.min(window.screen.width, window.screen.height) < 1024) ? 'tablet' : 'desktop';
+}
+async function makeDeviceHash() {
+  // non-unique technical device code: same browser + device gives the same code
+  const parts = [navigator.userAgent, navigator.language, (navigator.languages || []).join(','), navigator.platform || '',
+    window.screen.width + 'x' + window.screen.height + 'x' + window.screen.colorDepth, window.devicePixelRatio,
+    Intl.DateTimeFormat().resolvedOptions().timeZone, navigator.hardwareConcurrency || '', navigator.maxTouchPoints || ''].join('|');
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(parts));
+    return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) { return null; }
+}
+
+function startSubmission() {
+  startedAt = new Date();
+  submissionSeq = storedSeq() + 1;
+  LS.set('hs_submission_seq', String(submissionSeq));
+  submissionId = respondentId + '-' + submissionSeq;
+  queueEvent('start', '');
+  CONSENTS.forEach(c => queueEvent('consent', 'yes', c.key));
+}
+
+let queue = [];
+try { queue = JSON.parse(LS.get('hs_queue') || '[]'); } catch (e) { queue = []; }
+let sending = false, retryMs = 2000;
+
+function queueEvent(type, value, key) {
+  queue.push({
+    event_id: uuid(),
+    event_type: type,
+    question_key: key || '',
+    value: Array.isArray(value) ? value.join(';') : value,
+    respondent_id: respondentId,
+    submission_id: submissionId,
+    submission_sequence: submissionSeq,
+    submission_count: storedSeq(),
+    language: lang,
+    survey_version: SURVEY_VERSION,
+    client_time: new Date().toISOString(),
+    seconds_since_start: startedAt ? Math.round((Date.now() - startedAt) / 1000) : null,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+    browser_language: navigator.language || '',
+    device_type: deviceType(),
+    device_hash: deviceHash || '',
+    user_agent: navigator.userAgent
+  });
+  LS.set('hs_queue', JSON.stringify(queue));
+  flush();
+}
+
+async function flush() {
+  if (sending || !queue.length || !SAVE_URL) return;
+  sending = true;
+  const batch = queue.slice(0, 25);
+  try {
+    // text/plain avoids a CORS preflight; Apps Script reads e.postData.contents
+    await fetch(SAVE_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(batch) });
+    const sent = new Set(batch.map(e => e.event_id));
+    queue = queue.filter(e => !sent.has(e.event_id));
+    LS.set('hs_queue', JSON.stringify(queue));
+    retryMs = 2000;
+    const off = $('offline'); if (off) off.hidden = true;
+  } catch (e) {
+    const off = $('offline'); if (off) off.hidden = false;
+    setTimeout(flush, retryMs); retryMs = Math.min(retryMs * 2, 60000);
+  } finally {
+    sending = false;
+    if (queue.length && retryMs === 2000) setTimeout(flush, 50);
+  }
+}
+window.addEventListener('online', flush);
+window.addEventListener('pagehide', () => {
+  if (queue.length && SAVE_URL && navigator.sendBeacon) {
+    if (navigator.sendBeacon(SAVE_URL, new Blob([JSON.stringify(queue)], { type: 'text/plain;charset=utf-8' }))) { queue = []; LS.set('hs_queue', '[]'); }
+  }
+});
+
+function submit() {
+  const err = $('err');
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { err.textContent = t('emailErr'); err.hidden = false; return; }
+  lastAnswers = Object.assign({}, answers);
+  probChoice = null;
+  screen = 'done';
+  render();
+  setTimeout(() => {
+    if (email) queueEvent('email', email);
+    queueEvent('complete', String(visibleQs().length));
+  }, 0);
+}
+
+// ---------- boot ----------
+respondentId = LS.get('hs_respondent_id');
+if (!respondentId) { respondentId = uuid(); LS.set('hs_respondent_id', respondentId); }
+$('lang-en').addEventListener('click', () => setLang('en'));
+$('lang-et').addEventListener('click', () => setLang('et'));
+setLang(lang);
+makeDeviceHash().then(h => { deviceHash = h; });
+if (!SAVE_URL) {
+  const n = document.createElement('p');
+  n.className = 'notice';
+  n.textContent = 'Setup: SAVE_URL is empty. Answers are only kept in this browser.';
+  document.querySelector('.wrap').prepend(n);
+}
+flush();
+</script>
+
+</body>
+</html>
