@@ -254,7 +254,8 @@ const Q = [
   { key: 'smoking', sec: 'C', type: 'single', hint: ['Think of the last 12 months. "I used to" means you stopped more than a year ago.', 'Mõtle viimasele 12 kuule. „Varem suitsetasin“ tähendab, et loobusid rohkem kui aasta tagasi.'], en: 'Do you smoke?', et: 'Kas sa suitsetad?',
     opts: [['never', 'Never', 'Mitte kunagi'], ['former', 'I used to', 'Varem suitsetasin'], ['current', 'Yes', 'Jah']] },
   { key: 'alcohol', sec: 'C', type: 'single', en: 'How often do you drink alcohol?', et: 'Kui tihti sa alkoholi jood?',
-    opts: [['never', 'Never', 'Mitte kunagi'], ['occasional', 'Occasionally', 'Mõnikord'], ['regular', 'Regularly', 'Regulaarselt']] },
+    hint: ['Think of the last 12 months.', 'Mõtle viimasele 12 kuule.'],
+    opts: [['never', 'Never, or less than once a month', 'Mitte kunagi või harvem kui kord kuus'], ['occasional', 'A few times a month, at most once a week', 'Mõni kord kuus, kuni kord nädalas'], ['regular', 'Several times a week', 'Mitu korda nädalas']] },
   { key: 'environment', sec: 'C', type: 'scale', en: 'How much are you exposed to pollution, strong sun or harsh weather?', et: 'Kui palju puutud kokku saaste, tugeva päikese või karmi ilmaga?', ends: [['Very little', 'Very much'], ['Väga vähe', 'Väga palju']] },
   { key: 'water_blame', sec: 'C', type: 'scale', en: 'The water in my area causes hair fall.', et: 'Minu piirkonna vesi põhjustab juuste väljalangemist.', ends: [['Strongly disagree', 'Strongly agree'], ['Üldse ei nõustu', 'Täiesti nõustun']] },
   // D. hair care
